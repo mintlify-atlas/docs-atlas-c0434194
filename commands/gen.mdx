@@ -1,0 +1,105 @@
+---
+title: "examplenv gen — generate example .env files"
+description: "Use examplenv gen to recursively scan a directory for .env files and write redacted example counterparts that are safe to commit to version control."
+---
+
+The `gen` command recursively searches a directory for `.env` files and writes a corresponding `example.env` file next to each one. Values are preserved as-is unless a variable is marked as a secret — either via an inline `!SECRET` directive, a `!MASK-ON`/`!MASK-OFF` block, or the `--mask-all` flag.
+
+## Syntax
+
+```bash
+examplenv gen [DIR] [--mask-all]
+```
+
+## Arguments and flags
+
+<ParamField path="DIR" type="path">
+  Path to the directory examplenv searches for `.env` files. Defaults to the current working directory when omitted.
+</ParamField>
+
+<ParamField path="--mask-all" type="boolean" default="false">
+  When set, every variable value is replaced with `<YOUR_VARNAME>`, regardless of whether it carries a `!SECRET` comment or falls inside a `!MASK-ON` block.
+</ParamField>
+
+## Output file naming
+
+examplenv derives the output filename from the source filename:
+
+| Source file      | Generated file       |
+| ---------------- | -------------------- |
+| `.env`           | `example.env`        |
+| `.env.dev`       | `example.env.dev`    |
+| `.env.prod`      | `example.env.prod`   |
+| `.env.staging`   | `example.env.staging`|
+
+The generated file is written to the same directory as the source.
+
+## Examples
+
+### Run in the current directory
+
+```bash
+$ uv run examplenv gen
+Searching for .env files in: /workspaces/examplenv
+
+.env.dev -> example.env.dev
+.env.prod -> example.env.prod
+.env -> example.env
+```
+
+### Mask all values with `--mask-all`
+
+Use `--mask-all` when you want every variable value redacted, without needing to annotate individual lines.
+
+```bash
+$ uv run examplenv gen --mask-all
+Searching for .env files in: /workspaces/examplenv
+
+.env.dev -> example.env.dev
+.env.prod -> example.env.prod
+.env -> example.env
+```
+
+The generated file will replace every value:
+
+```bash
+# example.env (with --mask-all)
+VAR1=<YOUR_VAR1>
+VAR2=<YOUR_VAR2>
+```
+
+### Target a specific directory
+
+Pass a path to scan a directory other than the current one:
+
+```bash
+$ uv run examplenv gen ./services/api
+Searching for .env files in: /workspaces/examplenv/services/api
+
+.env -> example.env
+```
+
+## What the generated file looks like
+
+examplenv preserves comments, blank lines, and non-secret values. Only values explicitly marked as secrets are redacted:
+
+<CodeGroup>
+
+```bash input (.env.dev)
+STAGE=DEV
+OPENAI_API_KEY=sk-ldfkjslfjldsjflsd # !SECRET
+APP_SECRET=ThisIsASecret # !SECRET
+```
+
+```bash output (example.env.dev)
+# Example environment variables for .env.dev
+STAGE=DEV
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> # !SECRET
+APP_SECRET=<YOUR_APP_SECRET> # !SECRET
+```
+
+</CodeGroup>
+
+<Note>
+  Commit your `example.env` files to version control. They document the variables your application needs without exposing real credentials.
+</Note>

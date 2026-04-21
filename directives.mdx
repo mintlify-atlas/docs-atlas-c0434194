@@ -1,0 +1,123 @@
+---
+title: "examplenv directives: !SECRET, !MASK-ON, !MASK-OFF"
+description: "Use !SECRET, !MASK-ON, and !MASK-OFF comments in your .env files to tell examplenv exactly which values to redact in the generated example files."
+---
+
+Directives are special comments you add to your `.env` files to control which values examplenv redacts when generating `example.env` files. You place them inline or on their own comment lines, and examplenv reads them at generation time without modifying the source file.
+
+## !SECRET
+
+Mark a single variable as secret. examplenv replaces the value with `<YOUR_VARNAME>` and keeps the `# !SECRET` comment in the output so readers know the variable requires a real value.
+
+**Syntax:**
+
+```bash
+VAR=value # !SECRET
+```
+
+**Example:**
+
+<CodeGroup>
+
+```bash input (.env.dev)
+STAGE=DEV
+OPENAI_API_KEY=sk-ldfkjslfjldsjflsd # !SECRET
+APP_SECRET=ThisIsASecret # !SECRET
+```
+
+```bash output (example.env.dev)
+# Example environment variables for .env.dev
+STAGE=DEV
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY> # !SECRET
+APP_SECRET=<YOUR_APP_SECRET> # !SECRET
+```
+
+</CodeGroup>
+
+## !MASK-ON
+
+Start a masked block. Every variable from this line onward has its value replaced until examplenv encounters a `!MASK-OFF` directive or reaches the end of the file.
+
+**Syntax:**
+
+```bash
+# !MASK-ON optional description text
+```
+
+You can include optional text after `!MASK-ON` — examplenv only checks whether the directive string is present anywhere in the comment.
+
+## !MASK-OFF
+
+End a masked block started by `!MASK-ON`. Variables after this line are no longer masked.
+
+**Syntax:**
+
+```bash
+# !MASK-OFF optional description text
+```
+
+If you omit `!MASK-OFF`, masking continues to the end of the file.
+
+**Example:**
+
+<CodeGroup>
+
+```bash input (.env.prod)
+STAGE=DEV
+# !MASK-ON You can mask a region
+OPENAI_API_KEY=sk-ldfkjslfjldsjflsd
+APP_SECRET=ThisIsASecret
+# !MASK-OFF Ignore this to mask to EOF
+```
+
+```bash output (example.env.prod)
+# Example environment variables for .env.prod
+STAGE=DEV
+# !MASK-ON You can mask a region
+OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+APP_SECRET=<YOUR_APP_SECRET>
+# !MASK-OFF Ignore this to mask to EOF
+```
+
+</CodeGroup>
+
+## Directive reference
+
+<AccordionGroup>
+  <Accordion title="!SECRET — redact a single value" defaultOpen={false}>
+    Place `# !SECRET` at the end of any variable line. examplenv replaces the value with `<YOUR_VARNAME>` and retains the comment in the output.
+
+    ```bash
+    DB_PASSWORD=hunter2 # !SECRET
+    ```
+  </Accordion>
+  <Accordion title="!MASK-ON — start a masked block" defaultOpen={false}>
+    Place `# !MASK-ON` on its own line (or append it to a variable line). All variable values from this point onward are masked.
+
+    ```bash
+    # !MASK-ON credentials below
+    DB_PASSWORD=hunter2
+    API_KEY=abc123
+    ```
+  </Accordion>
+  <Accordion title="!MASK-OFF — end a masked block" defaultOpen={false}>
+    Place `# !MASK-OFF` on its own line to stop masking. Variables after this line retain their original values. Omit it to mask through the end of the file.
+
+    ```bash
+    # !MASK-ON credentials below
+    DB_PASSWORD=hunter2
+    # !MASK-OFF
+    PUBLIC_URL=https://example.com
+    ```
+  </Accordion>
+</AccordionGroup>
+
+| Directive    | Scope        | Effect                                      | Preserved in output |
+| ------------ | ------------ | ------------------------------------------- | ------------------- |
+| `!SECRET`    | Single line  | Replaces the tagged variable's value        | Yes                 |
+| `!MASK-ON`   | Block start  | Replaces all values from this line onward   | Yes                 |
+| `!MASK-OFF`  | Block end    | Stops masking                               | Yes                 |
+
+<Tip>
+  If you want to redact every value in a file, use the `--mask-all` flag with `examplenv gen` instead of annotating each variable individually.
+</Tip>

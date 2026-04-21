@@ -1,97 +1,54 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "examplenv: Safe example.env generation for any project"
+description: "examplenv automatically generates example.env files from your .env files, redacting secrets and masking sensitive values so you can safely commit them."
 ---
 
-## Setting up
+examplenv is a CLI tool that scans your project for `.env` files and produces safe, committable `example.env` counterparts. It preserves comments, whitespace, and non-secret values — and redacts secrets using simple inline directives.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install examplenv via uv — as a dev dependency or run it directly without installing.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Generate your first example.env files in under a minute.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Directives" icon="tag" href="/directives">
+    Learn the !SECRET, !MASK-ON, and !MASK-OFF directives that control what gets redacted.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="gen command" icon="terminal" href="/commands/gen">
+    Full reference for the examplenv gen command and its flags.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## How it works
 
-Everything you need to create world-class documentation.
+examplenv reads every `.env*` file in your project, processes each line according to any redaction directives you've added, and writes a matching `example.env*` file alongside it.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+<Steps>
+  <Step title="Add directives to your .env files">
+    Mark secret variables with `# !SECRET` or wrap sensitive regions with `# !MASK-ON` / `# !MASK-OFF`.
+  </Step>
+  <Step title="Run examplenv gen">
+    Run `examplenv gen` from your project root. examplenv finds all `.env*` files recursively and generates corresponding `example.env*` files.
+  </Step>
+  <Step title="Commit the example files">
+    The generated files contain placeholder values like `<YOUR_OPENAI_API_KEY>` for secrets, and real values for everything else — safe to commit to version control.
+  </Step>
+</Steps>
 
-## Need inspiration?
+## Key features
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Inline secret redaction" icon="eye-slash">
+    Add `# !SECRET` to any line to have its value replaced with a named placeholder.
+  </Card>
+  <Card title="Block masking" icon="shield">
+    Use `# !MASK-ON` and `# !MASK-OFF` to mask an entire region of variables at once.
+  </Card>
+  <Card title="Preserves structure" icon="align-left">
+    Comments, blank lines, and non-secret values are kept exactly as written.
+  </Card>
+  <Card title="Recursive discovery" icon="folder-tree">
+    Finds all `.env*` files in subdirectories automatically — no configuration needed.
+  </Card>
+</CardGroup>

@@ -1,0 +1,37 @@
+---
+title: "examplenv migrate — sync .env from example"
+description: "The migrate command is planned to help you update a .env file to match changes in its example counterpart. It is not yet implemented."
+---
+
+The `migrate` command is intended to compare an `example.env` file against your local `.env` and bring the `.env` in sync with any new variables that appear in the example. This is useful when a teammate adds a new required variable to `example.env` and you need to add a placeholder for it in your own `.env`.
+
+<Warning>
+  This command is not yet implemented. Running `examplenv migrate` will raise a `NotImplementedError` and exit immediately. Do not use it in scripts or automation.
+</Warning>
+
+## Syntax
+
+```bash
+examplenv migrate DIR
+```
+
+## Arguments
+
+<ParamField path="DIR" type="path" required>
+  Path to the directory examplenv searches for `example.env` files. This argument is required.
+</ParamField>
+
+## Planned behavior
+
+When implemented, `migrate` is expected to:
+
+1. Recursively find all `example.env*` files under the target directory.
+2. For each `example.env*`, locate the corresponding `.env*` file in the same directory.
+3. Identify variables present in `example.env*` but missing from `.env*`.
+4. Append the missing variables to `.env*` so you can fill in their values.
+
+This makes it easy to stay in sync when the project's required variables change over time.
+
+<Note>
+  Watch the [examplenv GitHub repository](https://github.com/thng292/examplenv) for updates on when this feature ships.
+</Note>

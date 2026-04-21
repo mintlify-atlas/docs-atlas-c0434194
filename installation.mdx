@@ -1,0 +1,69 @@
+---
+title: "Install examplenv"
+description: "Add examplenv to your project as a uv dev dependency or run it on demand with uvx. Requires Python 3.11 or later and the uv package manager."
+---
+
+examplenv is distributed as a Python package and integrates naturally with [uv](https://docs.astral.sh/uv/). You can add it as a dev dependency so it travels with your project, or run it on demand with `uvx` without touching your dependency list at all.
+
+## Install as a dev dependency
+
+Adding examplenv to your project's dev dependencies makes it available to everyone who checks out the repo and runs `uv sync`.
+
+<CodeGroup>
+
+```bash uv
+uv add --dev git+https://github.com/thng292/examplenv
+```
+
+</CodeGroup>
+
+Once installed, you can invoke it through uv:
+
+```bash
+uv run examplenv gen
+```
+
+## Run without installing
+
+If you want to try examplenv or use it in CI without modifying your dependencies, run it directly with `uvx`:
+
+```bash
+uvx git+https://github.com/thng292/examplenv
+```
+
+`uvx` fetches and runs the package in an isolated environment, so nothing is added to your project.
+
+## Requirements
+
+| Requirement | Version  |
+| ----------- | -------- |
+| Python      | >=3.11   |
+| uv          | any recent version |
+
+examplenv has a single runtime dependency: [typer](https://typer.tiangolo.com/) (>=0.20.0), which uv installs automatically.
+
+## Verify the installation
+
+After installing, confirm that examplenv is available by running:
+
+```bash
+examplenv --help
+```
+
+You should see output listing the available commands:
+
+```
+ Usage: examplenv [OPTIONS] COMMAND [ARGS]...
+
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --help          Show this message and exit.                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ gen      Find and generate all examples for all .env files.                  │
+│ migrate  Migrate the env file for you.                                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+<Tip>
+  If `examplenv` is not found after installing as a dev dependency, use `uv run examplenv --help` to invoke it through uv's managed environment.
+</Tip>

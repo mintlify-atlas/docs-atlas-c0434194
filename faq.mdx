@@ -1,0 +1,66 @@
+---
+title: "examplenv FAQ: installation, masking, and output behavior"
+description: "Answers to frequently asked questions about installing examplenv, masking values, output behavior, and how the tool handles different .env file layouts."
+---
+
+Here are answers to the questions that come up most often when using examplenv. If you don't find what you're looking for, open an issue on the [GitHub repository](https://github.com/thng292/examplenv).
+
+<AccordionGroup>
+  <Accordion title="Can I run examplenv without installing it?">
+    Yes. You can run examplenv directly from its GitHub repository using `uvx` without adding it to your project:
+
+    ```bash
+    uvx git+https://github.com/thng292/examplenv
+    ```
+
+    This fetches and runs the latest version in a temporary environment. To add it as a dev dependency instead, use:
+
+    ```bash
+    uv add --dev git+https://github.com/thng292/examplenv
+    ```
+  </Accordion>
+
+  <Accordion title="Which Python version does examplenv require?">
+    examplenv requires Python 3.11 or later. If you're on an older version, upgrade Python before installing.
+  </Accordion>
+
+  <Accordion title="Does examplenv modify my original .env files?">
+    No. examplenv only reads your `.env` files. It writes output to new `example.env*` files and never touches the originals.
+  </Accordion>
+
+  <Accordion title="What happens if an example.env file already exists?">
+    examplenv overwrites it. Every run regenerates the `example.env*` files from scratch, so the output always reflects the current state of your `.env` files.
+  </Accordion>
+
+  <Accordion title="How do I mask all values without annotating every line?">
+    Pass the `--mask-all` flag to the `gen` command:
+
+    ```bash
+    examplenv gen --mask-all
+    ```
+
+    This replaces every variable's value with a placeholder, regardless of whether you've added `!SECRET` or `!MASK-ON` directives. It's useful when you want to share the structure of your `.env` file without revealing any values at all.
+  </Accordion>
+
+  <Accordion title="What is the placeholder format for masked values?">
+    Masked values follow the format `<YOUR_VARNAME>`, where `VARNAME` is the variable's key. For example, a variable named `DATABASE_URL` becomes:
+
+    ```text
+    DATABASE_URL=<YOUR_DATABASE_URL>
+    ```
+
+    The key is taken directly from the parsed line, so the placeholder always matches the variable name exactly.
+  </Accordion>
+
+  <Accordion title="Does examplenv work with nested directories?">
+    Yes. examplenv uses a recursive glob pattern (`**/.env*`) starting from your project root (or the directory you specify), so it finds `.env*` files at any depth in the directory tree. Each discovered file gets a corresponding `example.env*` file written to the same directory.
+  </Accordion>
+
+  <Accordion title="Is the migrate command available?">
+    Not yet. Running `examplenv migrate` currently raises a `NotImplementedError`. The command is reserved for a future feature that would help you merge changes from an updated `example.env` back into your local `.env`. Watch the [GitHub repository](https://github.com/thng292/examplenv) for updates.
+  </Accordion>
+
+  <Accordion title="What happens to lines without a key (comments, blank lines)?">
+    They are preserved exactly as written. examplenv copies pure comment lines and blank lines into the output unchanged, so the structure and formatting of your original `.env` file is maintained in the generated example.
+  </Accordion>
+</AccordionGroup>

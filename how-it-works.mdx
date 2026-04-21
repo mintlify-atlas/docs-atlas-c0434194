@@ -1,0 +1,119 @@
+---
+title: "How examplenv discovers, parses, and generates .env examples"
+description: "Learn how examplenv discovers .env files, parses each line into structured parts, applies masking rules, and writes safe example.env output files."
+---
+
+examplenv works in three sequential stages: discovery, parsing, and generation. Understanding each stage helps you predict exactly what the output will look like and how to control which values get redacted.
+
+## File discovery
+
+examplenv uses Python's `glob` function to find every `.env*` file in your project, including hidden files in subdirectories:
+
+```python cli.py
+def find_env_files(root_dir: Path) -> list[Path]:
+    return [
+        Path(path)
+        for path in glob(
+            "**/.env*", recursive=True, root_dir=root_dir, include_hidden=True
+        )
+    ]
+```
+
+The `include_hidden=True` parameter ensures that dotfiles (like `.env`) are matched even on systems that exclude hidden files by default. The `**` prefix and `recursive=True` together cause the search to descend into every subdirectory of `root_dir`.
+
+## Line parsing
+
+Each `.env` file is read line by line. `parse_env_file` breaks every line into up to three parts — `key`, `value`, and `comment` — returning them as an `EnvFileLine` dict:
+
+```python cli.py
+class EnvFileLine(TypedDict):
+    key: str | None
+    value: str | None
+    comment: str | None
+```
+
+The parser scans each character in sequence:
+
+- When it encounters `=`, it records everything before it as the `key` and switches to collecting the `value`.
+- When it encounters `#`, it records everything before it as the current part (`key` or `value`) and switches to collecting the `comment`.
+- At end of line, it stores whatever remains as the final part.
+
+This means a line like `OPENAI_API_KEY=sk-abc123 # !SECRET` produces:
+
+| Field     | Value              |
+| --------- | ------------------ |
+| `key`     | `OPENAI_API_KEY`   |
+| `value`   | `sk-abc123`        |
+| `comment` | `!SECRET`          |
+
+Pure comment lines (starting with `#`) produce a result with `key=None`, `value=None`, and `comment` set to the comment text. Blank lines produce all three as `None` or empty strings. Both are preserved as-is in the output.
+
+## Value masking logic
+
+After parsing, `generate_example_env_file` decides whether to replace each line's value with a placeholder. Masking is triggered by any one of three conditions:
+
+1. **`--mask-all` flag** — the `mask_all` parameter is `True`, so every variable on every line is masked regardless of annotations.
+2. **Inside a `!MASK-ON` block** — the `in_mask_block` state variable is `True`. It turns on when the parser sees `!MASK-ON` in a comment, and turns off when it sees `!MASK-OFF`.
+3. **`!SECRET` in the line comment** — the current line has `SPECIAL_COMMENT_SECRET` (`"!SECRET"`) anywhere in its comment field.
+
+```python cli.py
+SPECIAL_COMMENT_MASK_ON = "!MASK-ON"
+SPECIAL_COMMENT_MASK_OFF = "!MASK-OFF"
+SPECIAL_COMMENT_SECRET = "!SECRET"
+
+def generate_example_env_file(original_file: Path, mask_all: bool) -> str:
+    env_vars = parse_env_file(original_file)
+    lines = [f"# Example environment variables for {original_file.name}"]
+    in_mask_block = False
+
+    for line in env_vars:
+        if line["comment"]:
+            if SPECIAL_COMMENT_MASK_ON in line["comment"]:
+                in_mask_block = True
+            if SPECIAL_COMMENT_MASK_OFF in line["comment"]:
+                in_mask_block = False
+
+        if (
+            mask_all
+            or in_mask_block
+            or (line["comment"] and SPECIAL_COMMENT_SECRET in line["comment"])
+        ) and line["value"]:
+            line["value"] = f"<YOUR_{line['key'] or ''}>"
+        lines.append(construct_env_line(line))
+
+    lines.append("")
+    return "\n".join(lines)
+```
+
+When masking applies, the value is replaced with `<YOUR_{KEY}>`, where `{KEY}` is the variable's key. For example, `OPENAI_API_KEY=sk-abc123` becomes `OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>`. Lines without a value (pure comments, blank lines) are never modified.
+
+<Note>
+`!MASK-ON` and `!MASK-OFF` can appear mid-file. Everything between the two markers is masked, and everything outside is left untouched. If you omit `!MASK-OFF`, masking continues to the end of the file.
+</Note>
+
+## Output file naming
+
+examplenv derives the output filename from the source filename using a simple rule:
+
+- `.env` becomes `example.env`
+- `.env.something` becomes `example.env.something`
+
+```python cli.py
+if env_file.name == ".env":
+    example_file = env_file.parent / "example.env"
+else:
+    # .env.something -> example.env.something
+    example_file = env_file.parent / f"example{env_file.name}"
+```
+
+The output file is written to the same directory as the source file. If an `example.env*` file already exists there, it is overwritten.
+
+## Header line
+
+Every generated file begins with a comment that identifies its source:
+
+```text
+# Example environment variables for .env.dev
+```
+
+This header is always the first line. It helps collaborators understand which `.env` file the example corresponds to, especially in projects with multiple environment-specific files like `.env.dev`, `.env.prod`, and `.env.test`.

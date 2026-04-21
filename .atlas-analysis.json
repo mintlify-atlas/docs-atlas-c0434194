@@ -1,0 +1,41 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "examplenv",
+  "projectDescription": "A CLI tool that generates safe example.env files from your .env files by redacting secrets and masking sensitive values.",
+  "theme": "luma",
+  "primaryColor": "#3B82F6",
+  "lightColor": "#EFF6FF",
+  "darkColor": "#1E3A5F",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": ["introduction", "installation", "quickstart"]
+      },
+      {
+        "group": "Usage",
+        "pages": ["commands/gen", "commands/migrate", "directives"]
+      },
+      {
+        "group": "Reference",
+        "pages": ["how-it-works", "faq"]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Recursively discovers all .env files in a project directory",
+    "Redacts secret values using the !SECRET inline comment directive",
+    "Masks entire regions of variables with !MASK-ON / !MASK-OFF block directives",
+    "Preserves whitespace, comments, and non-secret variable values",
+    "Generates placeholder values in the format <YOUR_VAR_NAME>",
+    "Supports a --mask-all flag to redact every variable value",
+    "Works with uv for zero-config installation and execution"
+  ],
+  "publicApiSurface": [
+    "examplenv gen [DIR] [--mask-all]",
+    "examplenv migrate [DIR]",
+    "!SECRET inline directive",
+    "!MASK-ON block directive",
+    "!MASK-OFF block directive"
+  ]
+}

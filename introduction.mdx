@@ -1,0 +1,41 @@
+---
+title: "examplenv: generate safe .env examples automatically"
+description: "examplenv generates committable example.env files from your .env files by redacting secrets and masking sensitive values using inline directives."
+---
+
+examplenv scans your project for `.env` files and produces safe `example.env` counterparts that you can commit to version control. It preserves comments, whitespace, and non-secret values exactly as they appear, while replacing secrets with descriptive placeholders like `<YOUR_OPENAI_API_KEY>`. You control what gets redacted by adding short inline directives directly in your `.env` files — no separate config files needed.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install examplenv as a uv dev dependency or run it with uvx.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Annotate your .env files and generate safe examples in three steps.
+  </Card>
+  <Card title="Directives" icon="tag" href="/directives">
+    Learn how !SECRET, !MASK-ON, and !MASK-OFF control redaction.
+  </Card>
+  <Card title="gen command" icon="terminal" href="/commands/gen">
+    Full reference for the examplenv gen command and its options.
+  </Card>
+</CardGroup>
+
+## Why examplenv?
+
+Every project with environment variables faces the same tension: your `.env` files contain real secrets that must never be committed, but your teammates still need to know which variables exist and what format to use. The usual workaround — maintaining a hand-written `example.env` file alongside your real `.env` — quickly goes stale as variables are added, renamed, or removed.
+
+examplenv solves this by generating the example file directly from the source of truth. You annotate secrets once, run `examplenv gen`, and the tool produces accurate, up-to-date example files automatically. Non-secret values are copied as-is, so reviewers get real context without exposing anything sensitive.
+
+## Directives at a glance
+
+Directives are short tokens you add to comments in your `.env` file. examplenv reads them during generation and decides how to handle each line or region.
+
+| Directive    | Scope          | Effect                                                         |
+| ------------ | -------------- | -------------------------------------------------------------- |
+| `!SECRET`    | Single line    | Replaces the value on that line with a `<YOUR_KEY>` placeholder |
+| `!MASK-ON`   | Start of block | Masks all values from this line until `!MASK-OFF` is found     |
+| `!MASK-OFF`  | End of block   | Stops masking; values after this line are copied as-is         |
+
+## MIT License
+
+examplenv is released under the MIT License. You are free to use, modify, and distribute it in personal and commercial projects.
